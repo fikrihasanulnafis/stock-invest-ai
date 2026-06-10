@@ -60,6 +60,45 @@ export default function Portfolio() {
 
   const [liveMarket, setLiveMarket] = useState([]);
   const [ihsg, setIHSG] = useState(null);
+  useEffect(() => {
+
+  const savedPortfolio =
+    localStorage.getItem("portfolioData");
+
+  const savedActionPlan =
+    localStorage.getItem("actionPlan");
+
+  const savedMetrics =
+    localStorage.getItem("metrics");
+
+  const savedStocks =
+    localStorage.getItem("stockInput");
+
+  const savedBudget =
+    localStorage.getItem("budgetInput");
+
+  const savedPeriod =
+    localStorage.getItem("period");
+
+  if (savedPortfolio)
+    setPortfolioData(JSON.parse(savedPortfolio));
+
+  if (savedActionPlan)
+    setActionPlan(JSON.parse(savedActionPlan));
+
+  if (savedMetrics)
+    setMetrics(JSON.parse(savedMetrics));
+
+  if (savedStocks)
+    setStockInput(savedStocks);
+
+  if (savedBudget)
+    setBudgetInput(savedBudget);
+
+  if (savedPeriod)
+    setPeriod(savedPeriod);
+
+}, []);
 
   // Format tanggal & waktu WIB
   const [currentTime, setCurrentTime] = useState('');
@@ -107,6 +146,36 @@ export default function Portfolio() {
         setPortfolioData(data.chartData);
         setActionPlan(data.actionPlan || []);
         setMetrics(data.metrics);
+
+        localStorage.setItem(
+          "portfolioData",
+          JSON.stringify(data.chartData)
+        );
+
+        localStorage.setItem(
+          "actionPlan",
+          JSON.stringify(data.actionPlan || [])
+        );
+
+        localStorage.setItem(
+          "metrics",
+          JSON.stringify(data.metrics)
+        );
+
+        localStorage.setItem(
+          "stockInput",
+          stockInput
+        );
+
+        localStorage.setItem(
+          "budgetInput",
+          budgetInput
+        );
+
+        localStorage.setItem(
+          "period",
+          period
+        );
       } else {
         alert("Error dari server: " + data.detail);
       }
@@ -363,6 +432,7 @@ export default function Portfolio() {
             className="w-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/50 font-bold py-3 rounded-lg hover:bg-emerald-500 hover:text-white transition-all disabled:opacity-50 text-sm uppercase tracking-wider"
           >
             {isLoading ? "⏳ Memproses..." : "Optimalisasi (Markowitz)"}
+            
           </button>
         </div>
       </div>
