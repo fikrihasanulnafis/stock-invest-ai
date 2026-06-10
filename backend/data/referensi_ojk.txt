@@ -1,0 +1,9 @@
+Glosarium dan Aturan Investasi StockInvest AI
+
+Value at Risk (VaR): Toleransi batas kerugian yang disarankan oleh OJK untuk investor ritel pemula sebaiknya tidak melebihi 5% dari total modal.
+
+Diversifikasi: Prinsip membagi risiko ke beberapa sektor industri yang berbeda, misalnya perbankan dan consumer goods, agar portofolio stabil.
+
+IHSG: Indeks Harga Saham Gabungan, acuan utama pergerakan saham di Indonesia.
+
+Blue Chip: Saham lapis satu yang stabil dan memiliki kapitalisasi pasar besar seperti BBCA, TLKM, dan UNVR.

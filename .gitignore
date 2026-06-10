@@ -1,0 +1,15 @@
+# # Aturan Backend
+# backend/env/
+# backend/__pycache__/
+# *.csv
+# .env
+
+# # Aturan Frontend
+# frontend/node_modules/
+# frontend/.next/
+# frontend/dist/
+# frontend/build/
+# frontend/src/co
+env/
+__pycache__/
+*.pyc

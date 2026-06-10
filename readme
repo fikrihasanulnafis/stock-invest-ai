@@ -1,0 +1,57 @@
+Panduan Setup Database dan Integrasi Sistem StockInvest AI
+Panduan ini berisi langkah-langkah untuk memindahkan dataset saham berformat CSV ke dalam database PostgreSQL (pgAdmin 4) dan menghubungkannya dengan backend aplikasi.
+
+Tahap 1: Memasukkan Data CSV ke pgAdmin 4
+Sebelum memuat data, pastikan Anda sudah membuat "wadah" berupa tabel kosong di pgAdmin 4 yang sesuai dengan struktur kolom laporan Anda.
+
+Langkah 1: Membuat Tabel Kosong
+
+Buka pgAdmin 4 dan navigasikan ke: Servers > PostgreSQL 14 > Databases > Saham > Schemas > public > Tables.
+
+Klik kanan pada database Saham, lalu pilih Query Tool.
+
+Buat tabel kosong bernama data_saham menggunakan perintah SQL (buat struktur kolom yang sesuai dengan file CSV Anda) dan jalankan query tersebut.
+
+Langkah 2: Proses Import File CSV
+
+Di panel sebelah kiri, cari tabel data_saham (jika belum muncul, klik kanan pada Tables lalu pilih Refresh).
+
+Klik kanan pada tabel data_saham, lalu pilih menu Import/Export Data....
+
+Pada tab Options/General, atur konfigurasi berikut:
+
+
+Import/Export: Geser sakelar (toggle) ke posisi Import.
+
+
+Filename: Klik ikon folder dan pilih file CSV saham Anda.
+
+
+Format: Pilih csv.
+
+
+Header: Ubah menjadi Yes (agar baris pertama yang berisi nama kolom tidak ikut diimpor sebagai data).
+
+
+Delimiter: Pilih tanda koma (,) atau tanda titik koma (;) sesuai dengan format regional komputer Anda.
+
+Klik tombol Save atau OK.
+
+Tunggu hingga muncul notifikasi hijau berbunyi Import completed. Anda dapat mengecek data yang masuk menggunakan perintah SELECT * FROM data_saham;.
+
+Tahap 2: Integrasi Database pada File Proyek
+Setelah data berhasil masuk ke PostgreSQL, langkah selanjutnya adalah menghubungkan database tersebut ke proyek aplikasi.
+
+1. Integrasi pada Sisi Backend (Python)
+Integrasi untuk membaca data dari database PostgreSQL dilakukan pada file database.py (atau di main.py sebelum kode dipecah/modularisasi).
+
+Di dalam file tersebut, terdapat konfigurasi koneksi yang mencakup nama database ("dbname": "saham"), port (standarnya "5432"), user, host, dan password.
+
+Pastikan penulisan nama database harus persis (case-sensitive) dan password pgAdmin Anda disisipkan dengan benar.
+
+2. Pemanggilan Data pada Sisi Frontend (React.js)
+Setelah backend berhasil mengeksekusi query (misalnya Query Rata-rata Harga Saham) dan menjadikannya API, data dari database tersebut akan ditampilkan ke website.
+
+Integrasi pemanggilan data ini terletak di file App.js (di dalam folder src).
+
+File App.js menggunakan fitur fetch() untuk menghubungi API Python dan mengambil data JSON dari database tersebut.

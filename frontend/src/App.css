@@ -1,0 +1,76 @@
+.App {
+  text-align: center;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.ticker-container {
+  width: 100%;
+  overflow: hidden;       /* sembunyikan scrollbar */
+  background-color: #131b2f;
+  padding: 5px 0;
+}
+
+.ticker-track {
+  display: flex;
+  gap: 40px;             /* jarak antar saham */
+  white-space: nowrap;    /* jangan wrap */
+  width: max-content;
+  animation: tickerMove 120s linear infinite; /* gerak horizontal */
+}
+
+.ticker-track:hover {
+  animation-play-state: paused; /* berhenti saat hover */
+}
+
+@keyframes tickerMove {
+  0% {
+    transform: translateX(100%);  /* mulai dari kanan */
+  }
+  100% {
+    transform: translateX(-100%); /* sampai ke kiri */
+  }
+}
+
+/* Optional: styling tiap item ticker */
+.ticker-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #ffffff;
+  font-weight: bold;
+  font-size: 14px;
+}
