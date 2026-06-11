@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from routers import portfolio, market
+from routers import portfolio, market, ihsg
 from routers.realtime_stock import router as realtime_router
 
 app = FastAPI(title="StockInvest AI API")
@@ -16,7 +16,7 @@ app.add_middleware(
 
 app.include_router(portfolio.router)
 app.include_router(market.router)
-
+app.include_router(ihsg.router)
 # TAMBAHKAN INI
 app.include_router(realtime_router)
 

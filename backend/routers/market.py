@@ -1,439 +1,396 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 import yfinance as yf
 import pandas as pd
-from data.user_selection import selected_stocks
-import statsmodels.api as sm
-from fastapi import APIRouter, HTTPException
-import traceback
 import numpy as np
-from statsmodels.tsa.holtwinters import ExponentialSmoothing
+import traceback
+from datetime import datetime, timedelta
+from data.user_selection import selected_stocks
 
 router = APIRouter()
+
+# ── Nama perusahaan lengkap ───────────────────────────────────────────────
+STOCK_NAMES = {
+    "BBCA": "PT Bank Central Asia Tbk.",
+    "BBRI": "PT Bank Rakyat Indonesia Tbk.",
+    "BMRI": "PT Bank Mandiri (Persero) Tbk.",
+    "BBNI": "PT Bank Negara Indonesia Tbk.",
+    "BBTN": "PT Bank Tabungan Negara Tbk.",
+    "BRIS": "PT Bank Syariah Indonesia Tbk.",
+    "BTPS": "PT Bank BTPN Syariah Tbk.",
+    "TLKM": "PT Telkom Indonesia Tbk.",
+    "EXCL": "PT XL Axiata Tbk.",
+    "ISAT": "PT Indosat Ooredoo Hutchison Tbk.",
+    "TOWR": "PT Sarana Menara Nusantara Tbk.",
+    "ASII": "PT Astra International Tbk.",
+    "UNTR": "PT United Tractors Tbk.",
+    "JSMR": "PT Jasa Marga (Persero) Tbk.",
+    "SMGR": "PT Semen Indonesia Tbk.",
+    "INTP": "PT Indocement Tunggal Prakarsa Tbk.",
+    "WSKT": "PT Waskita Karya Tbk.",
+    "WIKA": "PT Wijaya Karya Tbk.",
+    "PTPP": "PT PP (Persero) Tbk.",
+    "ADRO": "PT Adaro Energy Indonesia Tbk.",
+    "PTBA": "PT Bukit Asam Tbk.",
+    "HRUM": "PT Harum Energy Tbk.",
+    "ITMG": "PT Indo Tambangraya Megah Tbk.",
+    "ANTM": "PT Aneka Tambang Tbk.",
+    "MDKA": "PT Merdeka Copper Gold Tbk.",
+    "BRMS": "PT Bumi Resources Minerals Tbk.",
+    "BUMI": "PT Bumi Resources Tbk.",
+    "MEDC": "PT Medco Energi Internasional Tbk.",
+    "PGAS": "PT Perusahaan Gas Negara Tbk.",
+    "ESSA": "PT Essa Industries Indonesia Tbk.",
+    "AKRA": "PT AKR Corporindo Tbk.",
+    "AALI": "PT Astra Agro Lestari Tbk.",
+    "LSIP": "PT PP London Sumatra Indonesia Tbk.",
+    "GOTO": "PT GoTo Gojek Tokopedia Tbk.",
+    "MAPI": "PT Mitra Adiperkasa Tbk.",
+    "ACES": "PT Ace Hardware Indonesia Tbk.",
+    "ERAA": "PT Erajaya Swasembada Tbk.",
+    "SCMA": "PT Surya Citra Media Tbk.",
+    "MNCN": "PT Media Nusantara Citra Tbk.",
+    "KLBF": "PT Kalbe Farma Tbk.",
+    "MIKA": "PT Mitra Keluarga Karyasehat Tbk.",
+    "HEAL": "PT Medikaloka Hermina Tbk.",
+    "SIDO": "PT Industri Jamu Sido Muncul Tbk.",
+    "ICBP": "PT Indofood CBP Sukses Makmur Tbk.",
+    "INDF": "PT Indofood Sukses Makmur Tbk.",
+    "MYOR": "PT Mayora Indah Tbk.",
+    "CPIN": "PT Charoen Pokphand Indonesia Tbk.",
+    "JPFA": "PT Japfa Comfeed Indonesia Tbk.",
+    "CMRY": "PT Cisarua Mountain Dairy Tbk.",
+    "CTRA": "PT Ciputra Development Tbk.",
+    "BSDE": "PT Bumi Serpong Damai Tbk.",
+    "PWON": "PT Pakuwon Jati Tbk.",
+    "AMMN": "PT Amman Mineral Internasional Tbk.",
+    "BREN": "PT Barito Renewables Energy Tbk.",
+    "UNVR": "PT Unilever Indonesia Tbk.",
+    "GGRM": "PT Gudang Garam Tbk.",
+    "HMSP": "PT HM Sampoerna Tbk.",
+    "INKP": "PT Indah Kiat Pulp & Paper Tbk.",
+    "TKIM": "PT Pabrik Kertas Tjiwi Kimia Tbk.",
+}
+
+def get_stock_name(code: str) -> str:
+    return STOCK_NAMES.get(code.upper(), f"PT {code} Tbk.")
+
+# ── Domain untuk Google Favicon ───────────────────────────────────────────
+STOCK_DOMAINS = {
+    "BBCA": "bca.co.id",
+    "BBRI": "bri.co.id",
+    "BMRI": "bankmandiri.co.id",
+    "BBNI": "bni.co.id",
+    "BBTN": "btn.co.id",
+    "BRIS": "bankbsi.co.id",
+    "BTPS": "bankbtpn.co.id",
+    "TLKM": "telkom.co.id",
+    "EXCL": "xl.co.id",
+    "ISAT": "indosatooredoo.id",
+    "TOWR": "towerbersama.com",
+    "ASII": "astra.co.id",
+    "UNTR": "unitedtractors.com",
+    "JSMR": "jasamarga.com",
+    "SMGR": "semenindonesia.com",
+    "INTP": "indocement.co.id",
+    "ADRO": "adaro.com",
+    "PTBA": "ptba.co.id",
+    "HRUM": "harum-energy.com",
+    "ITMG": "itmg.co.id",
+    "ANTM": "antam.com",
+    "MDKA": "merdekacopper.com",
+    "BRMS": "bumi-resources.com",
+    "BUMI": "bumi-resources.com",
+    "MEDC": "medcoenergi.com",
+    "PGAS": "pgn.co.id",
+    "AKRA": "akr.co.id",
+    "AALI": "astra-agro.com",
+    "GOTO": "gotogroup.com",
+    "MAPI": "mapretail.com",
+    "KLBF": "kalbe.co.id",
+    "MIKA": "mitrakeluarga.com",
+    "HEAL": "hermina.co.id",
+    "SIDO": "sidomuncul.co.id",
+    "ICBP": "indofood.com",
+    "INDF": "indofood.com",
+    "MYOR": "mayoraindah.co.id",
+    "CPIN": "charoen-pokphand.co.id",
+    "CTRA": "ciputra.com",
+    "AMMN": "amman.co.id",
+    "UNVR": "unilever.co.id",
+    "GGRM": "gudanggaramtbk.co.id",
+}
+
+def get_logo_url(code: str) -> str:
+    domain = STOCK_DOMAINS.get(code.upper(), "")
+    if domain:
+        return f"https://www.google.com/s2/favicons?domain={domain}&sz=128"
+    return ""
+
+# ── Warna avatar fallback per huruf ──────────────────────────────────────
+AVATAR_COLORS = [
+    "#3b82f6","#10b981","#f59e0b","#8b5cf6","#ef4444",
+    "#14b8a6","#f97316","#06b6d4","#84cc16","#ec4899",
+]
+
+def get_avatar_color(code: str) -> str:
+    idx = ord(code[0]) % len(AVATAR_COLORS)
+    return AVATAR_COLORS[idx]
+
+# ── Mapping sektor ────────────────────────────────────────────────────────
+SECTOR_MAP = {
+    "Basic Materials":       ["ANTM","TKIM","INKP","BRMS","BUMI","MDKA","ADRO","HRUM","ITMG","PTBA","MEDC"],
+    "Energy":                ["PGAS","ESSA","AKRA","AALI","LSIP"],
+    "Financials":            ["BBCA","BBRI","BMRI","BBNI","BBTN","BTPS","BRIS"],
+    "Industrials":           ["ASII","UNTR","JSMR","WSKT","WIKA","PTPP","SMGR","INTP"],
+    "Consumer Cyclical":     ["MAPI","ACES","ERAA","SCMA","MNCN","GOTO"],
+    "Healthcare":            ["KLBF","MIKA","HEAL","SIDO"],
+    "Telecommunication":     ["TLKM","EXCL","ISAT","TOWR"],
+    "Property":              ["CTRA","BSDE","PWON"],
+    "Consumer Non-Cyclical": ["ICBP","INDF","MYOR","CPIN","JPFA","CMRY"],
+}
+
+ALL_TICKERS = [
+    "BBCA.JK","BBRI.JK","BMRI.JK","BBNI.JK","TLKM.JK","ASII.JK",
+    "UNTR.JK","ADRO.JK","ANTM.JK","MDKA.JK","EXCL.JK","GOTO.JK",
+    "MAPI.JK","BRMS.JK","BREN.JK","AMMN.JK","SMGR.JK","PTBA.JK",
+    "HRUM.JK","ITMG.JK","CTRA.JK","KLBF.JK","ICBP.JK","INDF.JK",
+    "AKRA.JK","ISAT.JK","PGAS.JK","HEAL.JK","MIKA.JK","BBTN.JK",
+    "JSMR.JK","BRIS.JK","BTPS.JK","MYOR.JK","SIDO.JK","CPIN.JK",
+    "WIKA.JK","WSKT.JK","PTPP.JK","INTP.JK","AALI.JK","LSIP.JK",
+    "UNVR.JK","GGRM.JK","HMSP.JK",
+]
+
 
 @router.get("/api/market-movers")
 def get_market_movers():
     print("===== MARKET PY TERLOAD =====")
 
-    stocks = selected_stocks
-    print("MARKET READ =", selected_stocks)
-
-    stocks = selected_stocks
+    stocks = list(selected_stocks)
+    print("MARKET READ selected_stocks =", stocks)
 
     if len(stocks) == 0:
+        stocks = ["BBCA.JK", "TLKM.JK", "BBRI.JK", "BMRI.JK", "ASII.JK"]
 
-        stocks = [
-            "BBCA.JK",
-            "BBRI.JK",
-            "BMRI.JK",
-            "TLKM.JK"
-        ]
+    # ── 1. Download 5d untuk gainers/losers ──────────────────────────
+    try:
+        raw      = yf.download(tickers=ALL_TICKERS, period="5d", progress=False, auto_adjust=True)
+        close_5d = raw["Close"]
+    except Exception as e:
+        print("ERROR download 5d:", e)
+        close_5d = pd.DataFrame()
 
     result = []
-
-    for stock in stocks:
-
+    for ticker in ALL_TICKERS:
         try:
-
-            data = yf.download(
-                stock,
-                period="1mo",
-                progress=False,
-                auto_adjust=True
-            )
-            print("STOCK =", stock)
-            print(data.head())
-            print(data.tail())
-
-            if len(data) < 2:
+            s = close_5d[ticker].dropna()
+            if len(s) < 2:
                 continue
+            latest = float(s.iloc[-1])
+            prev   = float(s.iloc[-2])
+            change = round(np.log(latest / prev) * 100, 2)
+            code   = ticker.replace(".JK", "")
+            result.append({"code": code, "price": round(latest, 0), "change": change})
+        except:
+            continue
 
-            close_price = data["Close"].squeeze()
+    sorted_desc = sorted(result, key=lambda x: x["change"], reverse=True)
+    sorted_asc  = sorted(result, key=lambda x: x["change"])
 
-            last_price = float(
-                close_price.iloc[-1]
-            )
-
-            log_return = np.log(
-                close_price / close_price.shift(1)
-            ).dropna()
-
-            expected_monthly_return = (
-                np.exp(
-                    float(log_return.mean()) * 22
-                ) - 1
-            ) * 100
-
-            change = round(
-                expected_monthly_return,
-                2
-            )
-
-            print(
-                stock,
-                "Expected Return =",
-                expected_monthly_return
-            )
-
-            result.append({
-                "stock": stock,
-                "price": round(last_price, 0),
-                "change": change
-            })
-
-            print("BERHASIL:", stock)
-
-        except Exception as e:
-            print("DOWNLOAD ERROR:", e)
-
-    result = sorted(
-        result,
-        key=lambda x: x["change"],
-        reverse=True
-    )
-
-    print("RESULT =", result)
-
-    def format_card(item):
-
-        code = item["stock"].replace(".JK", "")
-
+    def fmt(item):
         return {
-            "code": code,
-            "name": f"Saham {code}",
-            "price": f"Rp {int(item['price']):,}".replace(",", "."),
-            "change": (
-                f"+{item['change']}%"
-                if item["change"] > 0
-                else f"{item['change']}%"
-            )
+            "code":      item["code"],
+            "name":      get_stock_name(item["code"]),
+            "price":     f"Rp {int(item['price']):,}".replace(",", "."),
+            "change":    f"+{item['change']}%" if item["change"] > 0 else f"{item['change']}%",
+            "changeNum": item["change"],
         }
 
-    top_gainers = [
-        format_card(x)
-        for x in result
-        if x["change"] > 0
-    ][:3]
+    top_gainers = [fmt(x) for x in sorted_desc if x["change"] > 0][:5]
+    top_losers  = [fmt(x) for x in sorted_asc  if x["change"] < 0][:5]
 
-    top_losers = [
-        format_card(x)
-        for x in sorted(
-            result,
-            key=lambda x: x["change"]
+    # ── 2. Sektor Rotation ────────────────────────────────────────────
+    result_map      = {r["code"]: r["change"] for r in result}
+    sector_rotation = []
+    for sector, members in SECTOR_MAP.items():
+        changes = [result_map[c] for c in members if c in result_map]
+        score   = round(float(np.mean(changes)), 2) if changes else 0.0
+        sector_rotation.append({"sector": sector, "score": score})
+
+    # ── 3. AI Picks ───────────────────────────────────────────────────
+    candidate_tickers = ALL_TICKERS if not stocks else [s for s in stocks if s.endswith(".JK")]
+
+    picks_raw = []
+    try:
+        hist_picks = yf.download(
+            tickers=candidate_tickers, period="3mo",
+            progress=False, auto_adjust=True
         )
-        if x["change"] < 0
-    ][:3]
+        if len(candidate_tickers) == 1:
+            close_picks = hist_picks[["Close"]]
+            close_picks.columns = candidate_tickers
+        else:
+            close_picks = hist_picks["Close"]
 
-    monthly_dict = {}
-
-    for stock in stocks:
-
-        try:
-
-            hist = yf.download(
-                stock,
-                period="2y",
-                progress=False,
-                auto_adjust=True
-            )
-
-            print("HIST =", stock)
-            print(hist.head())
-
-            if hist.empty:
+        for ticker in candidate_tickers:
+            try:
+                s = close_picks[ticker].dropna()
+                if len(s) < 10:
+                    continue
+                log_ret = np.log(s / s.shift(1)).dropna()
+                mu  = float(log_ret.mean())
+                std = float(log_ret.std())
+                exp_return_1m = round((np.exp(mu * 22) - 1) * 100, 2)
+                sharpe_proxy  = round(mu / std if std > 0 else 0, 4)
+                conf          = min(95, max(50, int(50 + sharpe_proxy * 300)))
+                code          = ticker.replace(".JK", "")
+                picks_raw.append({
+                    "code":        code,
+                    "name":        get_stock_name(code),
+                    "logo":        get_logo_url(code),
+                    "avatarColor": get_avatar_color(code),
+                    "expReturn":   exp_return_1m,
+                    "confidence":  conf,
+                    "sharpe":      sharpe_proxy,
+                })
+            except:
                 continue
+    except Exception as e:
+        print("ERROR picks:", e)
 
-            monthly = (
-                hist["Close"]
-                .resample("M")
-                .mean()
-            )
+    ai_picks = sorted(
+        [p for p in picks_raw if p["expReturn"] > 0],
+        key=lambda x: x["sharpe"], reverse=True
+    )[:3]
 
-            monthly_dict[
-                stock.replace(".JK", "")
-            ] = monthly
+    # ── 4. Forecast ───────────────────────────────────────────────────
+    forecast_tickers = []
 
-        except Exception as e:
-            print("DOWNLOAD ERROR:", stock)
-            print(e)
+    for s in stocks:
+        if s.endswith(".JK"):
+            forecast_tickers.append(s)
+        else:
+            forecast_tickers.append(f"{s}.JK")
 
-    trend_data = []
+    forecast_tickers = forecast_tickers[:6]
 
-    if len(monthly_dict) > 0:
+    forecast_data    = []
+    forecast_future  = []
+    forecast_summary = []
 
-        combined = pd.DataFrame(monthly_dict)
+    try:
+        hist_fc = yf.download(
+            tickers=forecast_tickers, period="1y",
+            progress=False, auto_adjust=True
+        )
+        if len(forecast_tickers) == 1:
+            close_fc = hist_fc[["Close"]]
+            close_fc.columns = forecast_tickers
+        else:
+            close_fc = hist_fc["Close"]
 
-        combined.index = combined.index.strftime("%Y-%m")
+        weekly_fc = close_fc.resample("W-FRI").last().dropna(how="all")
+        today     = pd.Timestamp(datetime.now().date())
+        weekly_fc = weekly_fc[weekly_fc.index <= today]
 
-        for month, row in combined.iterrows():
+        for dt, row in weekly_fc.iterrows():
+            item = {"date": dt.strftime("%d %b")}
+            for ticker in forecast_tickers:
+                code = ticker.replace(".JK", "")
+                val  = row.get(ticker, None)
+                item[code] = round(float(val), 0) if (val is not None and not np.isnan(float(val))) else None
+            forecast_data.append(item)
 
-            item = {
-                "month": month
-            }
+        last_date    = weekly_fc.index[-1]
+        future_dates = [last_date + timedelta(weeks=i+1) for i in range(5)]
+        future_rows  = [{"date": d.strftime("%d %b") + "*"} for d in future_dates]
 
-            for col in combined.columns:
+        for ticker in forecast_tickers:
+            code = ticker.replace(".JK", "")
+            try:
+                series = weekly_fc[ticker].dropna()
+                if len(series) < 4:
+                    continue
+                alpha    = 0.3
+                smoothed = [float(series.iloc[0])]
+                for v in series.iloc[1:]:
+                    smoothed.append(alpha * float(v) + (1 - alpha) * smoothed[-1])
+                last_smooth   = smoothed[-1]
+                recent        = [float(x) for x in series.iloc[-4:]]
+                trend         = (recent[-1] - recent[0]) / 3.0
+                current_price = float(series.iloc[-1])
+                for i in range(5):
+                    future_rows[i][code] = round(max(last_smooth + trend * (i + 1), 1), 0)
+                target_5w = future_rows[4].get(code, current_price)
+                exp_ret   = round(((target_5w - current_price) / current_price) * 100, 2)
+                forecast_summary.append({
+                    "code":         code,
+                    "currentPrice": round(current_price, 0),
+                    "targetPrice":  round(target_5w, 0),
+                    "expReturn":    exp_ret,
+                })
+            except Exception as e:
+                print(f"Forecast error {ticker}:", e)
 
-                item[col] = (
-                    round(float(row[col]), 2)
-                    if pd.notna(row[col])
-                    else None
-                )
+        forecast_future = future_rows
 
-            trend_data.append(item)
-            print("MONTHLY_DICT =", monthly_dict.keys())
-            print("TOP GAINERS =", top_gainers)
-            print("TOP LOSERS =", top_losers)
-            print("TREND DATA =", trend_data[:2] if trend_data else [])
-                        
+    except Exception as e:
+        print("FORECAST ERROR:", e)
+        print(traceback.format_exc())
+
     return {
-        "topGainers": top_gainers,
-        "topLosers": top_losers,
-        "trendData": trend_data
+        "topGainers":      top_gainers,
+        "topLosers":       top_losers,
+        "sectorRotation":  sector_rotation,
+        "aiPicks":         ai_picks,
+        "forecastData":    forecast_data,
+        "forecastFuture":  forecast_future,
+        "forecastSummary": forecast_summary,
     }
+
 
 @router.get("/api/live-market")
 def get_live_market():
-
     try:
-
         tickers = [
-            "^JKSE",
-            "BBCA.JK",
-            "BBRI.JK",
-            "BMRI.JK",
-            "TLKM.JK",
-            "ASII.JK",
-            "ICBP.JK",
-            "INDF.JK",
-            "UNTR.JK",
-            "ADRO.JK",
-            "ANTM.JK",
-            "MDKA.JK",
-            "EXCL.JK",
-            "CPIN.JK",
-            "GOTO.JK",
-            "AMMN.JK",
-            "BRIS.JK",
-            "PGAS.JK",
-            "SMGR.JK",
-            "PTBA.JK",
-            "AKRA.JK",
-            "HRUM.JK",
-            "ITMG.JK",
-            "BBTN.JK",
-            "MAPI.JK",
-            "ACES.JK",
-            "KLBF.JK",
-            "MYOR.JK",
-            "SIDO.JK",
-            "TOWR.JK",
-            "ERAA.JK",
-            "MEDC.JK",
-            "JPFA.JK",
-            "SCMA.JK",
-            "MIKA.JK",
-            "HEAL.JK",
-            "ESSA.JK",
-            "LSIP.JK",
-            "AALI.JK",
-            "BBNI.JK",
-            "BTPS.JK",
-            "JSMR.JK",
-            "WSKT.JK",
-            "WIKA.JK",
-            "PTPP.JK",
-            "INTP.JK",
-            "CMRY.JK",
-            "BRMS.JK",
-            "ISAT.JK",
-            "MNCN.JK",
-            "TKIM.JK"
+            "^JKSE","BBCA.JK","BBRI.JK","BMRI.JK","TLKM.JK","ASII.JK",
+            "ICBP.JK","INDF.JK","UNTR.JK","ADRO.JK","ANTM.JK","MDKA.JK",
+            "EXCL.JK","CPIN.JK","GOTO.JK","AMMN.JK","BRIS.JK","PGAS.JK",
+            "SMGR.JK","PTBA.JK","AKRA.JK","HRUM.JK","ITMG.JK","BBTN.JK",
+            "MAPI.JK","ACES.JK","KLBF.JK","MYOR.JK","SIDO.JK","TOWR.JK",
+            "ERAA.JK","MEDC.JK","JPFA.JK","SCMA.JK","MIKA.JK","HEAL.JK",
+            "ESSA.JK","LSIP.JK","AALI.JK","BBNI.JK","BTPS.JK","JSMR.JK",
+            "WSKT.JK","WIKA.JK","PTPP.JK","INTP.JK","CMRY.JK","BRMS.JK",
+            "ISAT.JK","MNCN.JK","TKIM.JK","UNVR.JK","GGRM.JK","HMSP.JK",
         ]
-
-        data = yf.download(
-            tickers=tickers,
-            period="5d",
-            progress=False,
-            auto_adjust=True
-        )
-
+        data = yf.download(tickers=tickers, period="5d", progress=False, auto_adjust=True)
         stocks = []
-
         for ticker in tickers[1:]:
-
             try:
-
-                close_series = (
-                    data["Close"][ticker]
-                    .dropna()
-                )
-
-                if len(close_series) < 2:
+                s = data["Close"][ticker].dropna()
+                if len(s) < 2:
                     continue
-
-                latest = float(
-                    close_series.iloc[-1]
-                )
-
-                previous = float(
-                    close_series.iloc[-2]
-                )
-
-                change = round(
-                    np.log(
-                        latest / previous
-                    ) * 100,
-                    2
-                )
-
+                latest   = float(s.iloc[-1])
+                previous = float(s.iloc[-2])
+                change   = round(np.log(latest / previous) * 100, 2)
                 stocks.append({
-                    "code": ticker.replace(".JK", ""),
-                    "price": round(latest, 2),
+                    "code":   ticker.replace(".JK", ""),
+                    "price":  round(latest, 2),
                     "change": change
                 })
-
             except:
                 continue
 
-        ihsg_close = (
-            data["Close"]["^JKSE"]
-            .dropna()
-        )
-
-        ihsg_latest = float(
-            ihsg_close.iloc[-1]
-        )
-
-        ihsg_previous = float(
-            ihsg_close.iloc[-2]
-        )
-
-        ihsg_change = round(
-            np.log(
-                ihsg_latest /
-                ihsg_previous
-            ) * 100,
-            2
-        )
+        ihsg_s    = data["Close"]["^JKSE"].dropna()
+        ihsg_lat  = float(ihsg_s.iloc[-1])
+        ihsg_prev = float(ihsg_s.iloc[-2])
+        ihsg_chg  = round(np.log(ihsg_lat / ihsg_prev) * 100, 2)
 
         return {
-            "ihsg": {
-                "close": round(
-                    ihsg_latest,
-                    2
-                ),
-                "change": ihsg_change
-            },
+            "ihsg":   {"close": round(ihsg_lat, 2), "change": ihsg_chg},
             "stocks": stocks
         }
 
     except Exception as e:
-
         print("LIVE MARKET ERROR")
         print(traceback.format_exc())
-
-        raise HTTPException(
-            status_code=500,
-            detail=str(e)
-        )
-    
-@router.get("/api/forecast")
-def get_forecast(period: str = "2y"):
-
-    stocks = selected_stocks
-
-    if len(stocks) == 0:
-        stocks = [
-            "BBCA.JK",
-            "BBRI.JK",
-            "BMRI.JK",
-            "TLKM.JK"
-        ]
-
-    result = []
-
-    for stock in stocks:
-
-        try:
-
-            hist = yf.download(
-                stock,
-                period=period,
-                auto_adjust=True,
-                progress=False
-            )
-
-            if hist.empty:
-                continue
-
-            close_price = (
-                hist["Close"]
-                .squeeze()
-                .dropna()
-            )
-
-            model = ExponentialSmoothing(
-                close_price,
-                trend="add",
-                seasonal=None,
-                initialization_method="estimated"
-            ).fit()
-
-            forecast_days = 20
-
-            forecast = model.forecast(
-                forecast_days
-            )
-            
-            actual_dates = (
-                close_price.tail(30)
-                .index
-                .strftime("%Y-%m-%d")
-                .tolist()
-            )
-
-            forecast_dates = (
-                pd.date_range(
-                    start=close_price.index[-1],
-                    periods=forecast_days + 1,
-                    freq="B"
-                )[1:]
-                .strftime("%Y-%m-%d")
-                .tolist()
-            )
-
-            result.append({
-
-                "stock": stock.replace(".JK", ""),
-
-                "actual": [
-                    {
-                        "date": d,
-                        "price": round(float(p), 2)
-                    }
-                    for d, p in zip(
-                        actual_dates,
-                        close_price.tail(30)
-                    )
-                ],
-
-                "forecast": [
-                    {
-                        "date": d,
-                        "price": round(float(p), 2)
-                    }
-                    for d, p in zip(
-                        forecast_dates,
-                        forecast
-                    )
-                ]
-            })
-
-        except Exception as e:
-
-            print(stock)
-            print(e)
-
-    return {
-        "period": period,
-        "data": result
-    }
+        raise HTTPException(status_code=500, detail=str(e))

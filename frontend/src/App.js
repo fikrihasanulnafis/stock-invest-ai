@@ -1,9 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Portfolio from './components/Portfolio';
 import Market from './components/Market';
+import {
+  LineChart,
+  Line,
+  ResponsiveContainer
+} from "recharts";
 
 function App() {
   const [activeTab, setActiveTab] = useState('portfolio');
+  const [ihsg, setIHSG] = useState(null);
+
+  useEffect(() => {
+
+    fetch("http://localhost:8000/api/ihsg")
+      .then(res => res.json())
+      .then(data => setIHSG(data))
+      .catch(console.error);
+
+  }, []);
+
+  const chartData =
+  ihsg?.chart?.map((value, index) => ({
+    day: index,
+    value: value
+  })) || [];
 
   return (
     <div className="min-h-screen bg-[#0b1121] text-white font-sans selection:bg-emerald-500 selection:text-white">
@@ -55,23 +76,78 @@ function App() {
             </button>
           </nav>
 
-          <div className="flex items-center gap-3">
-            <div className="text-right hidden sm:block">
-              <div className="text-xs text-slate-400">
-                Total Portfolio
+          <div className="flex items-center gap-3 mr-2 mt-2">
+
+            <div className="text-right">
+
+              <div className="text-[15px] text-slate-400">
+                IHSG
               </div>
-              <div className="text-sm font-bold text-emerald-400">
-                Rp 15.2M
+
+              <div
+                className={`text-sm font-bold leading-none ${
+                  ihsg?.change >= 0
+                    ? "text-emerald-400"
+                    : "text-white-400"
+                }`}
+              >
+                {ihsg?.index?.toLocaleString("id-ID")}
               </div>
+
+              <div
+                className={`text-xs ${
+                  ihsg?.change >= 0
+                    ? "text-emerald-400"
+                    : "text-red-400"
+                }`}
+              >
+                {ihsg?.change > 0 ? "+" : ""}
+                {ihsg?.change?.toFixed(2)}%
+              </div>
+
             </div>
 
-            <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold border border-slate-600">
-              TK
+            <div
+              style={{
+                width: 100,
+                height: 30
+              }}
+            >
+              <ResponsiveContainer>
+
+                <LineChart
+                  data={chartData}
+                  margin={{
+                    top: 0,
+                    right: 0,
+                    left: 0,
+                    bottom: 0
+                  }}
+                >
+
+                  <Line
+                    type="monotone"
+                    dataKey="value"
+                    dot={false}
+                    strokeWidth={2}
+                    isAnimationActive={false}
+                    stroke={
+                      ihsg?.change >= 0
+                        ? "#22c55e"
+                        : "#ef4444"
+                    }
+                  />
+
+                </LineChart>
+
+              </ResponsiveContainer>
+
             </div>
+
           </div>
 
-        </div>
-      </header>
+          </div>
+          </header>
 
       <main className="max-w-7xl mx-auto p-4 py-8">
         {activeTab === 'portfolio' && <Portfolio />}
