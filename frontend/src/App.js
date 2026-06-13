@@ -1,27 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import Portfolio from './components/Portfolio';
 import Market from './components/Market';
-import {
-  LineChart,
-  Line,
-  ResponsiveContainer
-} from "recharts";
+import Chat from "./components/Chat";
+import {LineChart, Line, ResponsiveContainer} from "recharts";
 
 function App() {
   const [activeTab, setActiveTab] = useState('portfolio');
   const [ihsg, setIHSG] = useState(null);
 
-  useEffect(() => {
-
-    fetch("http://localhost:8000/api/ihsg")
+  useEffect(() => {fetch("http://localhost:8000/api/ihsg")
       .then(res => res.json())
       .then(data => setIHSG(data))
       .catch(console.error);
-
   }, []);
 
-  const chartData =
-  ihsg?.chart?.map((value, index) => ({
+  const chartData = ihsg?.chart?.map((value, index) => ({
     day: index,
     value: value
   })) || [];
@@ -77,16 +70,13 @@ function App() {
           </nav>
 
           <div className="flex items-center gap-3 mr-2 mt-2">
-
             <div className="text-right">
-
               <div className="text-[15px] text-slate-400">
                 IHSG
               </div>
 
               <div
-                className={`text-sm font-bold leading-none ${
-                  ihsg?.change >= 0
+                className={`text-sm font-bold leading-none ${ihsg?.change >= 0
                     ? "text-emerald-400"
                     : "text-white-400"
                 }`}
@@ -95,8 +85,7 @@ function App() {
               </div>
 
               <div
-                className={`text-xs ${
-                  ihsg?.change >= 0
+                className={`text-xs ${ihsg?.change >= 0
                     ? "text-emerald-400"
                     : "text-red-400"
                 }`}
@@ -104,70 +93,31 @@ function App() {
                 {ihsg?.change > 0 ? "+" : ""}
                 {ihsg?.change?.toFixed(2)}%
               </div>
-
             </div>
 
-            <div
-              style={{
-                width: 100,
-                height: 30
-              }}
+            <div style={{width: 100, height: 30}}
             >
               <ResponsiveContainer>
-
-                <LineChart
-                  data={chartData}
-                  margin={{
-                    top: 0,
-                    right: 0,
-                    left: 0,
-                    bottom: 0
-                  }}
+                <LineChart data={chartData} margin={{top: 0, right: 0, left: 0, bottom: 0}}
                 >
-
-                  <Line
-                    type="monotone"
-                    dataKey="value"
-                    dot={false}
-                    strokeWidth={2}
-                    isAnimationActive={false}
-                    stroke={
-                      ihsg?.change >= 0
+                  <Line type="monotone" dataKey="value" dot={false} strokeWidth={2} isAnimationActive={false}
+                    stroke={ ihsg?.change >= 0
                         ? "#22c55e"
                         : "#ef4444"
                     }
                   />
-
                 </LineChart>
-
               </ResponsiveContainer>
-
             </div>
-
           </div>
 
-          </div>
-          </header>
+        </div>
+      </header>
 
       <main className="max-w-7xl mx-auto p-4 py-8">
         {activeTab === 'portfolio' && <Portfolio />}
         {activeTab === 'market' && <Market />}
-
-        {activeTab === 'chat' && (
-          <div className="flex items-center justify-center h-96 bg-[#131b2f] rounded-xl border border-slate-800">
-            <div className="text-center">
-              <div className="text-5xl mb-4">🚧</div>
-
-              <h2 className="text-xl font-bold text-white mb-2">
-                AI Chatbot Offline
-              </h2>
-
-              <p className="text-slate-400 text-sm">
-                Integrasi LLM sedang dalam tahap penundaan.
-              </p>
-            </div>
-          </div>
-        )}
+        {activeTab === 'chat' && <Chat />}
       </main>
 
     </div>

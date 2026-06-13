@@ -42,7 +42,7 @@ export default function Market() {
         .catch(() => {});
     };
     load();
-    const t = setInterval(load, 50000);
+    const t = setInterval(load, 10000);
     return () => clearInterval(t);
   }, []);
 
@@ -103,6 +103,22 @@ export default function Market() {
   return (
     <div className="space-y-5">
 
+      {/* ── HEADER ── */}
+      <div className="flex justify-between items-start">
+        <div>
+          <h2 className="text-xl font-bold text-white">MARKET MOVERS</h2>
+        </div>
+        <div className="flex flex-col items-end gap-1.5">
+          <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold px-3 py-1.5 rounded">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse inline-block"></span>
+          Live Market Data
+          </div>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Terakhir diperbarui: {timeStr}
+            </p>
+        </div>
+      </div>
+
       {/* ── TICKER MARQUEE ── */}
       <div className="bg-[#0b1121] border border-slate-800 rounded py-2">
         <Marquee speed={28} gradient={false} pauseOnHover>
@@ -117,6 +133,7 @@ export default function Market() {
               <span className="text-slate-700 mx-2">|</span>
             </div>
           )}
+
           {liveMarket.map((s, i) => (
             <div key={i} className="mx-4 flex items-center gap-2 text-sm">
               <span className="font-semibold text-white">{s.code}</span>
@@ -128,18 +145,6 @@ export default function Market() {
             </div>
           ))}
         </Marquee>
-      </div>
-
-      {/* ── HEADER ── */}
-      <div className="flex justify-between items-start">
-        <div>
-          <h2 className="text-xl font-bold text-white">Market Movers</h2>
-          <p className="text-xs text-slate-500 mt-0.5">Terakhir diperbarui: {timeStr}</p>
-        </div>
-        <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold px-3 py-1.5 rounded">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse inline-block"></span>
-          Live Market Data
-        </div>
       </div>
 
       {/* ── BARIS 1: GAINERS (2/5) | LOSERS (2/5) | SEKTOR (1/5) ── */}
