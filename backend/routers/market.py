@@ -9,7 +9,7 @@ from data.user_selection import selected_stocks
 
 router = APIRouter()
 
-# ── Nama perusahaan lengkap ───────────────────────────────────────────────
+# Nama perusahaan  
 STOCK_NAMES = {
     "BBCA": "PT Bank Central Asia Tbk.",
     "BBRI": "PT Bank Rakyat Indonesia Tbk.",
@@ -75,7 +75,7 @@ STOCK_NAMES = {
 def get_stock_name(code: str) -> str:
     return STOCK_NAMES.get(code.upper(), f"PT {code} Tbk.")
 
-# ── Domain untuk Google Favicon ───────────────────────────────────────────
+# Domain untuk Google Favicon
 STOCK_DOMAINS = {
     "BBCA": "bca.co.id",
     "BBRI": "bri.co.id",
@@ -127,7 +127,7 @@ def get_logo_url(code: str) -> str:
         return f"https://www.google.com/s2/favicons?domain={domain}&sz=128"
     return ""
 
-# ── Warna avatar fallback per huruf ──────────────────────────────────────
+# Warna avatar
 AVATAR_COLORS = [
     "#3b82f6","#10b981","#f59e0b","#8b5cf6","#ef4444",
     "#14b8a6","#f97316","#06b6d4","#84cc16","#ec4899",
@@ -137,7 +137,7 @@ def get_avatar_color(code: str) -> str:
     idx = ord(code[0]) % len(AVATAR_COLORS)
     return AVATAR_COLORS[idx]
 
-# ── Mapping sektor ────────────────────────────────────────────────────────
+# Mapping sektor
 SECTOR_MAP = {
     "Basic Materials":       ["ANTM","TKIM","INKP","BRMS","BUMI","MDKA","ADRO","HRUM","ITMG","PTBA","MEDC"],
     "Energy":                ["PGAS","ESSA","AKRA","AALI","LSIP"],
@@ -172,7 +172,7 @@ def get_market_movers():
     if len(stocks) == 0:
         stocks = ["BBCA.JK", "TLKM.JK", "BBRI.JK", "BMRI.JK", "ASII.JK"]
 
-    # ── 1. Download 5d untuk gainers/losers ──────────────────────────
+    # 1. Download data saham 5days untuk gainers/losers 
     try:
         raw      = yf.download(tickers=ALL_TICKERS, period="5d", progress=False, auto_adjust=True)
         close_5d = raw["Close"]
@@ -209,7 +209,7 @@ def get_market_movers():
     top_gainers = [fmt(x) for x in sorted_desc if x["change"] > 0][:5]
     top_losers  = [fmt(x) for x in sorted_asc  if x["change"] < 0][:5]
 
-    # ── 2. Sektor Rotation ────────────────────────────────────────────
+    # 2. Sektor Rotation
     result_map      = {r["code"]: r["change"] for r in result}
     sector_rotation = []
     for sector, members in SECTOR_MAP.items():
@@ -217,7 +217,7 @@ def get_market_movers():
         score   = round(float(np.mean(changes)), 2) if changes else 0.0
         sector_rotation.append({"sector": sector, "score": score})
 
-    # ── 3. AI Picks ───────────────────────────────────────────────────
+    # 3. AI Picks
     candidate_tickers = ALL_TICKERS if not stocks else [s for s in stocks if s.endswith(".JK")]
 
     picks_raw = []
@@ -263,7 +263,7 @@ def get_market_movers():
         key=lambda x: x["sharpe"], reverse=True
     )[:3]
 
-    # ── 4. Forecast ───────────────────────────────────────────────────
+    # 4. Forecast
     forecast_tickers = []
 
     for s in stocks:
