@@ -94,6 +94,7 @@ function lsSet(key, val) {
 
 export default function Portfolio() {
   // ── State — baca dari localStorage ─────────────────────────────────
+  const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8000";
   const [stockInput, setStockInput] = useState(
     () => localStorage.getItem(LS.STOCKS) || "",
   );
@@ -147,7 +148,7 @@ export default function Portfolio() {
   // ── Live market ticker ──────────────────────────────────────────────
   useEffect(() => {
     const load = () => {
-      fetch("http://localhost:8000/api/live-market")
+     fetch(`${API_URL}/api/live-market`)
         .then((r) => r.json())
         .then((d) => {
           setLiveMarket(d.stocks || []);
@@ -168,7 +169,7 @@ export default function Portfolio() {
     }
     setIsLoading(true);
     try {
-      const res = await fetch("http://localhost:8000/api/simulate", {
+      const res = await fetch(`${API_URL}/api/simulate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

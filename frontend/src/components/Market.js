@@ -28,6 +28,7 @@ function ForecastTooltip({ active, payload, label }) {
 }
 
 export default function Market() {
+  const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8000";
   const [data, setData]             = useState(null);
   const [loading, setLoading]       = useState(true);
   const [liveMarket, setLiveMarket] = useState([]);
@@ -36,7 +37,7 @@ export default function Market() {
 
   useEffect(() => {
     const load = () => {
-      fetch('http://localhost:8000/api/live-market')
+      fetch(`${API_URL}/api/live-market`)
         .then(r => r.json())
         .then(d => { setLiveMarket(d.stocks || []); setIhsg(d.ihsg || null); })
         .catch(() => {});
@@ -47,7 +48,7 @@ export default function Market() {
   }, []);
 
   useEffect(() => {
-    fetch('http://localhost:8000/api/market-movers')
+   fetch(`${API_URL}/api/market-movers`)
       .then(r => r.json())
       .then(d => { setData(d); setLoading(false); })
       .catch(() => setLoading(false));
