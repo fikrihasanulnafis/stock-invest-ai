@@ -37,7 +37,7 @@ export default function Market() {
 
   useEffect(() => {
     const load = () => {
-      fetch(`${API_URL}/api/live-market`)
+      fetch('http://localhost:8000/api/live-market')
         .then(r => r.json())
         .then(d => { setLiveMarket(d.stocks || []); setIhsg(d.ihsg || null); })
         .catch(() => {});
@@ -48,7 +48,7 @@ export default function Market() {
   }, []);
 
   useEffect(() => {
-   fetch(`${API_URL}/api/market-movers`)
+  fetch('http://localhost:8000/api/market-movers')
       .then(r => r.json())
       .then(d => { setData(d); setLoading(false); })
       .catch(() => setLoading(false));

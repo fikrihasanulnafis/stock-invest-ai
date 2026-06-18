@@ -9,14 +9,7 @@ function App() {
   const [ihsg, setIHSG] = useState(null);
   const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8000";
 
-  // useEffect(() => {fetch("http://localhost:8000/api/ihsg")
-  //     .then(res => res.json())
-  //     .then(data => setIHSG(data))
-  //     .catch(console.error);
-  // }, []);
-  useEffect(() => {
-    // Ubah URL di dalam fetch menggunakan backtick (`) dan variabel API_URL
-    fetch(`${API_URL}/api/ihsg`)
+  useEffect(() => {fetch("http://localhost:8000/api/ihsg")
       .then(res => res.json())
       .then(data => setIHSG(data))
       .catch(console.error);

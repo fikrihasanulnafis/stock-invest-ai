@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 
 export default function Chat() {
-  const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8000";
   const [sessions, setSessions] = useState(() => {
     const saved = localStorage.getItem("stockinvest_chat_sessions");
     return saved
@@ -136,7 +135,7 @@ export default function Chat() {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${API_URL}/api/chat`,{
+      const response = await fetch("http://localhost:8000/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: userMsg }),

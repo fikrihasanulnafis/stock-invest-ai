@@ -143,7 +143,7 @@ export default function Portfolio() {
 
   useEffect(() => {
     const load = () => {
-      fetch(`${API_URL}/api/live-market`)
+      fetch("http://localhost:8000/api/live-market")
         .then((r) => r.json())
         .then((d) => {
           setLiveMarket(d.stocks || []);
@@ -163,7 +163,7 @@ export default function Portfolio() {
     }
     setIsLoading(true);
     try {
-      const res = await fetch(`${API_URL}/api/simulate`, {
+      const res = await fetch("http://localhost:8000/api/simulate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
