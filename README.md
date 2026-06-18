@@ -1,4 +1,4 @@
-# 📈 StockInvest AI
+# StockInvest AI
 
 **Platform Analisis Saham dan Investasi Berbasis AI**
 
@@ -6,7 +6,7 @@ StockInvest AI adalah aplikasi web yang memadukan analisis pasar saham, data rea
 
 ---
 
-## ✨ Ringkasan
+## Ringkasan
 
 StockInvest AI hadir untuk:
 
@@ -18,7 +18,7 @@ StockInvest AI hadir untuk:
 
 ---
 
-## 🧩 Struktur Proyek Saat Ini
+## Struktur Proyek Saat Ini
 
 Proyek dibagi menjadi dua modul utama:
 
@@ -59,7 +59,7 @@ stock-invest-ai/
 
 ---
 
-## 🛠️ Teknologi Utama
+## Teknologi Utama
 
 ### Backend
 
@@ -79,7 +79,7 @@ stock-invest-ai/
 
 ---
 
-## ⚙️ Persiapan Lingkungan
+## Persiapan Lingkupan
 
 ### Prasyarat
 
@@ -90,7 +90,7 @@ stock-invest-ai/
 
 ---
 
-## 🚀 Cara Menjalankan Proyek
+## Cara Menjalankan Proyek
 
 ### 1. Clone repository
 
@@ -161,7 +161,7 @@ npm start
 
 ---
 
-## 📡 Endpoint Backend
+## Endpoint Backend
 
 ### Umum
 
