@@ -1,57 +1,191 @@
-Panduan Setup Database dan Integrasi Sistem StockInvest AI
-Panduan ini berisi langkah-langkah untuk memindahkan dataset saham berformat CSV ke dalam database PostgreSQL (pgAdmin 4) dan menghubungkannya dengan backend aplikasi.
+# 📈 StockInvest AI
 
-Tahap 1: Memasukkan Data CSV ke pgAdmin 4
-Sebelum memuat data, pastikan Anda sudah membuat "wadah" berupa tabel kosong di pgAdmin 4 yang sesuai dengan struktur kolom laporan Anda.
+**Platform Analisis Saham dan Investasi Berbasis AI**
 
-Langkah 1: Membuat Tabel Kosong
+StockInvest AI adalah aplikasi web yang memadukan analisis pasar saham, data real-time, dan fitur AI untuk membantu pengguna melakukan riset dan simulasi investasi saham Indonesia.
 
-Buka pgAdmin 4 dan navigasikan ke: Servers > PostgreSQL 14 > Databases > Saham > Schemas > public > Tables.
+---
 
-Klik kanan pada database Saham, lalu pilih Query Tool.
+## ✨ Ringkasan
 
-Buat tabel kosong bernama data_saham menggunakan perintah SQL (buat struktur kolom yang sesuai dengan file CSV Anda) dan jalankan query tersebut.
+StockInvest AI hadir untuk:
 
-Langkah 2: Proses Import File CSV
+- Menyajikan data IHSG dan saham BEI dalam tampilan visual
+- Memberikan simulasi portofolio berbasis optimasi Markowitz
+- Menyediakan fitur chat AI untuk konsultasi investasi
+- Menampilkan data saham real-time menggunakan Yahoo Finance
+- Menggunakan referensi OJK sebagai dasar edukasi investasi
 
-Di panel sebelah kiri, cari tabel data_saham (jika belum muncul, klik kanan pada Tables lalu pilih Refresh).
+---
 
-Klik kanan pada tabel data_saham, lalu pilih menu Import/Export Data....
+## 🧩 Struktur Proyek Saat Ini
 
-Pada tab Options/General, atur konfigurasi berikut:
+Proyek dibagi menjadi dua modul utama:
 
+- `backend/` — Backend FastAPI dengan banyak endpoint pasar, chat, dan simulasi portofolio
+- `frontend/` — Frontend React untuk pengalaman pengguna
 
-Import/Export: Geser sakelar (toggle) ke posisi Import.
+```text
+stock-invest-ai/
+├── backend/                          # FastAPI backend
+│   ├── .env                          # Konfigurasi runtime environment
+│   ├── data/                         # Sumber data dan referensi OJK
+│   │   ├── __init__.py
+│   │   ├── referensi_ojk.txt
+│   │   └── user_selection.py         # State pilihan saham pengguna
+│   ├── main.py                       # Entry point FastAPI
+│   └── routers/                      # API routes
+│       ├── chat.py                   # Chat AI endpoint
+│       ├── ihsg.py                   # IHSG endpoint
+│       ├── market.py                 # Market movers, AI picks, forecast
+│       ├── portfolio.py              # Simulasi portofolio & optimasi
+│       └── realtime_stock.py         # Harga saham real-time per ticker
+├── frontend/                         # React frontend
+│   ├── package.json                  # Dependensi dan skrip npm
+│   ├── public/                       # File statis
+│   └── src/                          # Kode sumber React
+│       ├── App.js
+│       ├── App.css
+│       ├── index.js
+│       ├── logo.svg
+│       ├── reportWebVitals.js
+│       ├── setupTests.js
+│       └── components/               # UI components
+│           ├── Chat.js
+│           ├── Market.js
+│           └── Portfolio.js
+└── readme                            # Dokumentasi ini
+```
 
+---
 
-Filename: Klik ikon folder dan pilih file CSV saham Anda.
+## 🛠️ Teknologi Utama
 
+### Backend
 
-Format: Pilih csv.
+- FastAPI
+- yfinance
+- NumPy, pandas, SciPy
+- python-dotenv
+- CORS middleware
 
+### Frontend
 
-Header: Ubah menjadi Yes (agar baris pertama yang berisi nama kolom tidak ikut diimpor sebagai data).
+- React 19
+- Tailwind CSS 4
+- Recharts
+- React Fast Marquee
+- React Scripts
 
+---
 
-Delimiter: Pilih tanda koma (,) atau tanda titik koma (;) sesuai dengan format regional komputer Anda.
+## ⚙️ Persiapan Lingkungan
 
-Klik tombol Save atau OK.
+### Prasyarat
 
-Tunggu hingga muncul notifikasi hijau berbunyi Import completed. Anda dapat mengecek data yang masuk menggunakan perintah SELECT * FROM data_saham;.
+- Python 3.8+ atau lebih tinggi
+- Node.js 14+ atau lebih tinggi
+- Koneksi internet untuk `yfinance`
+- Git
 
-Tahap 2: Integrasi Database pada File Proyek
-Setelah data berhasil masuk ke PostgreSQL, langkah selanjutnya adalah menghubungkan database tersebut ke proyek aplikasi.
+---
 
-1. Integrasi pada Sisi Backend (Python)
-Integrasi untuk membaca data dari database PostgreSQL dilakukan pada file database.py (atau di main.py sebelum kode dipecah/modularisasi).
+## 🚀 Cara Menjalankan Proyek
 
-Di dalam file tersebut, terdapat konfigurasi koneksi yang mencakup nama database ("dbname": "saham"), port (standarnya "5432"), user, host, dan password.
+### 1. Clone repository
 
-Pastikan penulisan nama database harus persis (case-sensitive) dan password pgAdmin Anda disisipkan dengan benar.
+```bash
+git clone <repository-url>
+cd stock-invest-ai
+```
 
-2. Pemanggilan Data pada Sisi Frontend (React.js)
-Setelah backend berhasil mengeksekusi query (misalnya Query Rata-rata Harga Saham) dan menjadikannya API, data dari database tersebut akan ditampilkan ke website.
+### 2. Backend
 
-Integrasi pemanggilan data ini terletak di file App.js (di dalam folder src).
+#### 2.1 Buat virtual environment
 
-File App.js menggunakan fitur fetch() untuk menghubungi API Python dan mengambil data JSON dari database tersebut.
+```bash
+python -m venv .venv
+```
+
+#### 2.2 Aktifkan virtual environment
+
+```powershell
+.venv\Scripts\activate
+```
+
+#### 2.3 Install dependensi backend
+
+```bash
+cd backend
+pip install fastapi uvicorn yfinance numpy pandas scipy python-dotenv
+```
+
+#### 2.4 Konfigurasi environment
+
+Buka `backend/.env` dan atur nilai:
+
+```text
+LANGCHAIN_ENABLE=true
+GROQ_API_KEY=your_groq_api_key
+GROQ_MODEL=llama-3.1-8b-instant
+```
+
+Jika `GROQ_API_KEY` tidak dimasukkan, fitur chat akan fallback ke balasan template.
+
+#### 2.5 Jalankan backend
+
+```bash
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
+
+> Backend tersedia di `http://localhost:8000`
+
+---
+
+### 3. Frontend
+
+#### 3.1 Install dependensi frontend
+
+```bash
+cd ../frontend
+npm install
+```
+
+#### 3.2 Jalankan frontend
+
+```bash
+npm start
+```
+
+> Frontend tersedia di `http://localhost:3000`
+
+---
+
+## 📡 Endpoint Backend
+
+### Umum
+
+- `GET /` — Health check API
+
+### Portofolio
+
+- `POST /api/simulate` — Simulasi optimasi portofolio saham
+
+### Market
+
+- `GET /api/market-movers` — Top gainers, top losers, sektor rotation, AI picks, forecast
+- `GET /api/live-market` — Data pasar yang disimulasikan secara berkala
+
+### IHSG
+
+- `GET /api/ihsg` — Data indeks IHSG dan chart 1 tahun
+
+### Chat AI
+
+- `POST /api/chat` — Konsultasi AI investasi berbasis GROQ dan filter topik
+
+### Real-time Stock
+
+- `GET /api/realtime-stock/{ticker}` — Data harga real-time untuk ticker `.JK`
+
+---

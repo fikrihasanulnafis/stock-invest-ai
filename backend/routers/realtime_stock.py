@@ -7,21 +7,13 @@ router = APIRouter()
 def get_stock(ticker: str):
 
     symbol = f"{ticker.upper()}.JK"
-
     try:
-
         stock = yf.Ticker(symbol)
-
         hist = stock.history(period="1d")
 
         if hist.empty:
-            raise HTTPException(
-                status_code=404,
-                detail="Ticker tidak ditemukan"
-            )
-
+            raise HTTPException(status_code=404, detail="Ticker tidak ditemukan")
         latest = hist.iloc[-1]
-
         return {
             "ticker": ticker.upper(),
             "open": float(latest["Open"]),
@@ -32,7 +24,4 @@ def get_stock(ticker: str):
         }
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=500, detail=str(e))

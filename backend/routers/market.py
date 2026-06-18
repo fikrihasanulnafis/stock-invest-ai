@@ -161,7 +161,6 @@ ALL_TICKERS = [
     "UNVR.JK","GGRM.JK","HMSP.JK",
 ]
 
-
 @router.get("/api/market-movers")
 def get_market_movers():
     print("===== MARKET PY TERLOAD =====")
@@ -172,7 +171,7 @@ def get_market_movers():
     if len(stocks) == 0:
         stocks = ["BBCA.JK", "TLKM.JK", "BBRI.JK", "BMRI.JK", "ASII.JK"]
 
-    # 1. Download data saham 5days untuk gainers/losers 
+    # data saham 5 hari untuk gainers/losers 
     try:
         raw      = yf.download(tickers=ALL_TICKERS, period="5d", progress=False, auto_adjust=True)
         close_5d = raw["Close"]
@@ -209,7 +208,7 @@ def get_market_movers():
     top_gainers = [fmt(x) for x in sorted_desc if x["change"] > 0][:5]
     top_losers  = [fmt(x) for x in sorted_asc  if x["change"] < 0][:5]
 
-    # 2. Sektor Rotation
+    # Sektor Rotation
     result_map      = {r["code"]: r["change"] for r in result}
     sector_rotation = []
     for sector, members in SECTOR_MAP.items():
@@ -217,7 +216,7 @@ def get_market_movers():
         score   = round(float(np.mean(changes)), 2) if changes else 0.0
         sector_rotation.append({"sector": sector, "score": score})
 
-    # 3. AI Picks
+    # AI Picks
     candidate_tickers = ALL_TICKERS if not stocks else [s for s in stocks if s.endswith(".JK")]
 
     picks_raw = []
@@ -263,7 +262,7 @@ def get_market_movers():
         key=lambda x: x["sharpe"], reverse=True
     )[:3]
 
-    # 4. Forecast
+    # Forecast
     forecast_tickers = []
 
     for s in stocks:
@@ -348,54 +347,6 @@ def get_market_movers():
         "forecastSummary": forecast_summary,
     }
 
-
-# @router.get("/api/live-market")
-# def get_live_market():
-#     try:
-#         tickers = [
-#             "^JKSE","BBCA.JK","BBRI.JK","BMRI.JK","TLKM.JK","ASII.JK",
-#             "ICBP.JK","INDF.JK","UNTR.JK","ADRO.JK","ANTM.JK","MDKA.JK",
-#             "EXCL.JK","CPIN.JK","GOTO.JK","AMMN.JK","BRIS.JK","PGAS.JK",
-#             "SMGR.JK","PTBA.JK","AKRA.JK","HRUM.JK","ITMG.JK","BBTN.JK",
-#             "MAPI.JK","ACES.JK","KLBF.JK","MYOR.JK","SIDO.JK","TOWR.JK",
-#             "ERAA.JK","MEDC.JK","JPFA.JK","SCMA.JK","MIKA.JK","HEAL.JK",
-#             "ESSA.JK","LSIP.JK","AALI.JK","BBNI.JK","BTPS.JK","JSMR.JK",
-#             "WSKT.JK","WIKA.JK","PTPP.JK","INTP.JK","CMRY.JK","BRMS.JK",
-#             "ISAT.JK","MNCN.JK","TKIM.JK","UNVR.JK","GGRM.JK","HMSP.JK",
-#         ]
-#         data = yf.download(tickers=tickers, period="5d", progress=False, auto_adjust=True)
-#         stocks = []
-#         for ticker in tickers[1:]:
-#             try:
-#                 s = data["Close"][ticker].dropna()
-#                 if len(s) < 2:
-#                     continue
-#                 latest   = float(s.iloc[-1])
-#                 previous = float(s.iloc[-2])
-#                 change   = round(np.log(latest / previous) * 100, 2)
-#                 stocks.append({
-#                     "code":   ticker.replace(".JK", ""),
-#                     "price":  round(latest, 2),
-#                     "change": change
-#                 })
-#             except:
-#                 continue
-
-#         ihsg_s    = data["Close"]["^JKSE"].dropna()
-#         ihsg_lat  = float(ihsg_s.iloc[-1])
-#         ihsg_prev = float(ihsg_s.iloc[-2])
-#         ihsg_chg  = round(np.log(ihsg_lat / ihsg_prev) * 100, 2)
-
-#         return {
-#             "ihsg":   {"close": round(ihsg_lat, 2), "change": ihsg_chg},
-#             "stocks": stocks
-#         }
-
-#     except Exception as e:
-#         print("LIVE MARKET ERROR")
-#         print(traceback.format_exc())
-#         raise HTTPException(status_code=500, detail=str(e))
-
 LIVE_CACHE = {}
 
 @router.get("/api/live-market")
@@ -414,11 +365,9 @@ def get_live_market():
             "ISAT.JK","MNCN.JK","TKIM.JK","UNVR.JK","GGRM.JK","HMSP.JK",
         ]
         
-        # 1. JIKA CACHE KOSONG, DOWNLOAD DATA ASLI SEKALI SAJA SEBAGAI HARGA DASAR
         if not LIVE_CACHE:
             print("===== INITIALIZING LIVE MARKET CACHE FROM YFINANCE =====")
             data = yf.download(tickers=tickers, period="5d", progress=False, auto_adjust=True)
-            
             for ticker in tickers:
                 try:
                     s = data["Close"][ticker].dropna()
@@ -430,25 +379,16 @@ def get_live_market():
                 except:
                     continue
 
-        # 2. PROSES SIMULASI FLUKTUASI HARGA UNTUK SAHAM (5-10 DETIK SEKALI)
         stocks = []
-        for ticker in tickers[1:]:  # Mulai dari indeks 1 (skip IHSG)
+        for ticker in tickers[1:]:
             try:
                 if ticker not in LIVE_CACHE:
                     continue
-                
-                # Buat pergerakan acak naik/turun tipis (antara -0.2% sampai +0.2%)
                 pct_move = random.uniform(-0.002, 0.002)
                 current_price = LIVE_CACHE[ticker]["price"]
                 new_price = current_price * (1 + pct_move)
-                
-                # Validasi agar harga saham tidak menyentuh angka <= 0 atau gocap (jika perlu)
                 new_price = max(new_price, 1.0)
-                
-                # Simpan harga baru ke dalam cache global
                 LIVE_CACHE[ticker]["price"] = new_price
-                
-                # Hitung ulang persentase perubahan log terhadap harga penutupan kemarin
                 change = round(np.log(new_price / LIVE_CACHE[ticker]["base_prev"]) * 100, 2)
                 
                 stocks.append({
@@ -459,18 +399,14 @@ def get_live_market():
             except:
                 continue
 
-        # 3. PROSES SIMULASI FLUKTUASI UNTUK IHSG
         if "^JKSE" in LIVE_CACHE:
-            # IHSG bergerak lebih stabil (antara -0.05% sampai +0.05%)
             ihsg_move = random.uniform(-0.0005, 0.0005)
             current_ihsg = LIVE_CACHE["^JKSE"]["price"]
             new_ihsg = current_ihsg * (1 + ihsg_move)
-            
             LIVE_CACHE["^JKSE"]["price"] = new_ihsg
             ihsg_chg = round(np.log(new_ihsg / LIVE_CACHE["^JKSE"]["base_prev"]) * 100, 2)
         else:
             new_ihsg, ihsg_chg = 7000.0, 0.0
-
         return {
             "ihsg":   {"close": round(new_ihsg, 2), "change": ihsg_chg},
             "stocks": stocks

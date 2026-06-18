@@ -120,7 +120,6 @@ export default function Market() {
         </div>
       </div>
 
-      {/* ── TICKER MARQUEE ── */}
       <div className="bg-[#0b1121] border border-slate-800 rounded py-2">
         <Marquee speed={28} gradient={false} pauseOnHover>
           {ihsg && (
@@ -148,16 +147,12 @@ export default function Market() {
         </Marquee>
       </div>
 
-      {/* ── BARIS 1: GAINERS (2/5) | LOSERS (2/5) | SEKTOR (1/5) ── */}
       <div className="grid grid-cols-5 gap-4 items-start">
-
-        {/* TOP GAINERS — 2/5 */}
         <div className="col-span-2 bg-[#131b2f] border border-slate-700 rounded overflow-hidden">
           <div className="h-0.5 bg-emerald-500"></div>
           <div className="p-4">
             <div className="flex justify-between items-center mb-3">
               <h3 className="text-xl font-bold text-white uppercase tracking-widest">Top Gainers</h3>
-              
             </div>
             <table className="w-full text-sm">
               <tbody>
@@ -176,7 +171,6 @@ export default function Market() {
           </div>
         </div>
 
-        {/* TOP LOSERS — 2/5 */}
         <div className="col-span-2 bg-[#131b2f] border border-slate-700 rounded overflow-hidden">
           <div className="h-0.5 bg-red-500"></div>
           <div className="p-4">
@@ -200,12 +194,10 @@ export default function Market() {
           </div>
         </div>
 
-        {/* SEKTOR ROTATION — 1/5 */}
         <div className="col-span-1 bg-[#131b2f] border border-slate-700 rounded overflow-hidden">
           <div className="h-0.5 bg-blue-500"></div>
           <div className="p-4">
             <h3 className="text-xs font-bold text-white uppercase tracking-widest mb-3 flex items-center gap-1.5">
-               SECTOR PERFORMANCE
               <span className="text-slate-600 font-normal normal-case tracking-normal text-[10px]">(1D)</span>
             </h3>
             <div className="space-y-2">
@@ -230,15 +222,11 @@ export default function Market() {
             </div>
           </div>
         </div>
-
       </div>
 
-      {/* ── BARIS 2: FORECAST FULL WIDTH ── */}
       <div className="bg-[#131b2f] border border-slate-700 rounded overflow-hidden">
         <div className="h-0.5 bg-indigo-500"></div>
         <div className="p-5">
-
-          {/* Header */}
           <div className="flex flex-wrap justify-between items-start gap-3 mb-3">
             <div>
               <h3 className="text-xl font-bold text-white uppercase tracking-widest flex items-center gap-2">
@@ -277,7 +265,6 @@ export default function Market() {
             </div>
           </div>
 
-          {/* Legend saham */}
           {forecastCodes.length > 0 && (
             <div className="flex items-center gap-4 mb-3 flex-wrap">
               <span className="text-xs text-slate-600">Saham Portfolio:</span>
@@ -291,7 +278,6 @@ export default function Market() {
             </div>
           )}
 
-          {/* Chart */}
           <div className="h-72">
             {histSlice.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
@@ -361,7 +347,6 @@ export default function Market() {
             )}
           </div>
 
-          {/* Forecast Summary Cards */}
           {forecastSummary.length > 0 && (
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 mt-4 pt-4 border-t border-slate-800">
               {forecastSummary.map((fc, i) => (
@@ -389,10 +374,8 @@ export default function Market() {
           <p className="text-[10px] text-slate-700 mt-3">
             Titik putus-putus merupakan estimasi harga ke depan berdasarkan model Exponential Smoothing. Bukan saran investasi.
           </p>
-
         </div>
       </div>
-
     </div>
   );
 }

@@ -5,7 +5,6 @@ router = APIRouter()
 
 @router.get("/api/ihsg")
 def get_ihsg():
-
     data = yf.download(
         "^JKSE",
         period="1y",
@@ -13,10 +12,8 @@ def get_ihsg():
     )
 
     close = data["Close"].squeeze()
-
     last_price = float(close.iloc[-1])
     prev_price = float(close.iloc[-2])
-
     change = round(
         ((last_price - prev_price) / prev_price) * 100,
         2

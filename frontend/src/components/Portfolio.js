@@ -50,7 +50,6 @@ function MiniSparkline({ data, color }) {
   );
 }
 
-// ── localStorage keys ─────────────────────────────────────────────────────
 const LS = {
   STOCKS: "si_stocks",
   BUDGET: "si_budget",
@@ -93,7 +92,6 @@ function lsSet(key, val) {
 }
 
 export default function Portfolio() {
-  // ── State — baca dari localStorage ─────────────────────────────────
   const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8000";
   const [stockInput, setStockInput] = useState(
     () => localStorage.getItem(LS.STOCKS) || "",
@@ -116,7 +114,6 @@ export default function Portfolio() {
   const [ihsg, setIHSG] = useState(null);
   const [currentTime, setCurrentTime] = useState("");
 
-  // ── Persist input ke localStorage ──────────────────────────────────
   useEffect(() => {
     localStorage.setItem(LS.STOCKS, stockInput);
   }, [stockInput]);
@@ -127,7 +124,6 @@ export default function Portfolio() {
     localStorage.setItem(LS.PERIOD, period);
   }, [period]);
 
-  // ── Waktu ───────────────────────────────────────────────────────────
   useEffect(() => {
     const fmt = () =>
       setCurrentTime(
@@ -145,10 +141,9 @@ export default function Portfolio() {
     return () => clearInterval(t);
   }, []);
 
-  // ── Live market ticker ──────────────────────────────────────────────
   useEffect(() => {
     const load = () => {
-     fetch(`${API_URL}/api/live-market`)
+      fetch(`${API_URL}/api/live-market`)
         .then((r) => r.json())
         .then((d) => {
           setLiveMarket(d.stocks || []);
@@ -161,7 +156,6 @@ export default function Portfolio() {
     return () => clearInterval(t);
   }, []);
 
-  // ── Simulasi ────────────────────────────────────────────────────────
   const handleSimulate = async () => {
     if (!stockInput || !budgetInput) {
       alert("Masukkan kode saham dan budget.");
@@ -183,7 +177,6 @@ export default function Portfolio() {
         setPortfolioData(data.chartData);
         setActionPlan(data.actionPlan || []);
         setMetrics(data.metrics);
-        // ── Persist hasil analisis ──────────────────────────────────
         lsSet(LS.PORTFOLIO, data.chartData);
         lsSet(LS.ACTION, data.actionPlan || []);
         lsSet(LS.METRICS, data.metrics);
@@ -197,7 +190,6 @@ export default function Portfolio() {
     }
   };
 
-  // ── Clear semua ─────────────────────────────────────────────────────
   const handleClear = () => {
     setStockInput("");
     setBudgetInput("");
@@ -210,16 +202,13 @@ export default function Portfolio() {
 
   const budgetNum = parseFloat(budgetInput) || 0;
   const hasResult = actionPlan.length > 0;
-
   return (
     <div className="space-y-5">
-      {/* ── HEADER ─────────────────────────────────────────────────── */}
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-bold text-white">DASHBOARD PORTOFOLIO</h2>
         <span className="text-xs text-slate-500">{currentTime}</span>
       </div>
 
-      {/* ── TICKER ─────────────────────────────────────────────────── */}
       <div className="bg-[#0b1121] border border-slate-800 rounded py-2">
         <Marquee speed={25} gradient={false} pauseOnHover>
           {ihsg && (
@@ -254,7 +243,6 @@ export default function Portfolio() {
         </Marquee>
       </div>
 
-      {/* ── 4 METRIC CARDS ─────────────────────────────────────────── */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {[
           {
@@ -324,7 +312,6 @@ export default function Portfolio() {
         ))}
       </div>
 
-      {/* ── DONUT + ANALISIS RETURN ────────────────────────────────── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {/* Donut */}
         <div className="bg-[#131b2f] border border-slate-700 rounded p-5">
@@ -389,7 +376,6 @@ export default function Portfolio() {
           </div>
         </div>
 
-        {/* Analisis Return */}
         <div className="bg-[#131b2f] border border-slate-700 rounded p-5">
           <h3 className="text-xl font-bold text-white uppercase tracking-widest mb-4">
             Analisis Return Portfolio
@@ -461,7 +447,6 @@ export default function Portfolio() {
         </div>
       </div>
 
-      {/* ── INPUT SIMULASI ─────────────────────────────────────────── */}
       <div className="bg-[#131b2f] border border-slate-700 rounded p-5">
         <h3 className="text-xl font-bold text-white uppercase tracking-widest mb-4">
           Parameter Simulasi
@@ -523,7 +508,6 @@ export default function Portfolio() {
         </div>
       </div>
 
-      {/* ── RISK METRICS + METRIK TAMBAHAN ────────────────────────── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <div className="bg-[#131b2f] border border-slate-700 rounded p-5">
           <h3 className="text-xl font-bold text-white uppercase tracking-widest mb-4">
@@ -613,7 +597,6 @@ export default function Portfolio() {
         </div>
       </div>
 
-      {/* ── ANALISIS PER SAHAM ─────────────────────────────────────── */}
       {hasResult && (
         <div className="bg-[#131b2f] border border-slate-700 rounded p-5">
           <h3 className="text-xl font-bold text-white uppercase tracking-widest mb-4">
